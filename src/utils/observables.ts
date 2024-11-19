@@ -101,6 +101,11 @@ export function getSelectedTags<IsMulti extends boolean>({
   )
 }
 
+interface PredefinedTagsContext {
+  client: SanityClient
+  documentType: string
+}
+
 /**
  * Takes a function that can possibly return singleton tags and forces it to return an array of tags
  * @param predefinedTags A function that returns an unrefined tag(s)
@@ -108,16 +113,18 @@ export function getSelectedTags<IsMulti extends boolean>({
  */
 const predefinedTagWrapper = async (
   predefinedTags:
-    | (() => Promise<GeneralTag | GeneralTag[] | RefTag | RefTag[]>)
-    | (() => GeneralTag | GeneralTag[] | RefTag | RefTag[])
+    | ((context: PredefinedTagsContext) => Promise<GeneralTag | GeneralTag[] | RefTag | RefTag[]>)
+    | ((context: PredefinedTagsContext) => GeneralTag | GeneralTag[] | RefTag | RefTag[]),
+  context: PredefinedTagsContext
 ): Promise<GeneralTag[] | RefTag[]> => {
-  const tags = await predefinedTags()
+  const tags = await predefinedTags(context)
   if (!Array.isArray(tags)) return [tags]
   return tags
 }
 
 interface GetPredefinedTagsInput {
   client: SanityClient
+  documentType: string
   predefinedTags: PredefinedTags
   customLabel?: string
   customValue?: string
@@ -126,6 +133,7 @@ interface GetPredefinedTagsInput {
 /**
  * Manipulate the predefined tags into a list of refined tags
  * @param client A Sanity client
+ * @param documentType a string that matches a document type in the sanity schema
  * @param predefinedTags A list or singleton of RefTag or GeneralTag that will act as predefined tags for react-select
  * @param customLabel a string with a custom label key to be swapped on the tag(s)
  * @param customValue a string with a value label key to be swapped on the tag(s)
@@ -133,6 +141,7 @@ interface GetPredefinedTagsInput {
  */
 export const getPredefinedTags = ({
   client,
+  documentType,
   predefinedTags,
   customLabel = 'label',
   customValue = 'value',
@@ -141,7 +150,9 @@ export const getPredefinedTags = ({
     predefinedTags instanceof Function ? predefinedTags : async () => predefinedTags
 
   return defer(() =>
-    from(predefinedTagWrapper(tagFunction)).pipe(refineTagsPipe({client, customLabel, customValue}))
+    from(predefinedTagWrapper(tagFunction, {client, documentType})).pipe(
+      refineTagsPipe({client, customLabel, customValue})
+    )
   )
 }
 
