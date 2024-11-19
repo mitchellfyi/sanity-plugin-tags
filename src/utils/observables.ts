@@ -147,7 +147,7 @@ export const getPredefinedTags = ({
 
 interface GetTagsFromReferenceInput {
   client: SanityClient
-  document: string
+  documentType: string
   customLabel?: string
   customValue?: string
 }
@@ -155,19 +155,19 @@ interface GetTagsFromReferenceInput {
 /**
  * Observes changes to a referenced document and returns refined tags
  * @param client A Sanity client
- * @param document a string that matches a document type in the sanity schema
+ * @param documentType a string that matches a document type in the sanity schema
  * @param customLabel a string with a custom label key to be swapped on the tag(s)
  * @param customValue a string with a value label key to be swapped on the tag(s)
  * @returns An observable that returns pre-refined tags received from the referenced document
  */
 export const getTagsFromReference = ({
   client,
-  document,
+  documentType,
   customLabel = 'label',
   customValue = 'value',
 }: GetTagsFromReferenceInput): Observable<Tag[]> => {
   const query = `
-  *[ _type == $document && defined(@[$customLabel]) && defined(@[$customValue])] {
+  *[ _type == $documentType && defined(@[$customLabel]) && defined(@[$customValue])] {
     _id,
     "value": @[$customValue],
     "label": @[$customLabel]
@@ -175,7 +175,7 @@ export const getTagsFromReference = ({
   `
 
   const params = {
-    document,
+    documentType,
     customLabel: customLabel.split('.')[0],
     customValue: customValue.split('.')[0],
   }

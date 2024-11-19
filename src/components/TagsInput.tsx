@@ -112,6 +112,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       // setup the predefined observable
       predefinedSubscription = getPredefinedTags({
         client,
+        documentType: includeFromReference,
         predefinedTags,
         customLabel,
         customValue,
@@ -124,7 +125,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       if (typeof includeFromReference === 'string') {
         referenceSubscription = getTagsFromReference({
           client,
-          document: includeFromReference,
+          documentType: includeFromReference,
           customLabel,
           customValue,
         }).subscribe((tags) => {
